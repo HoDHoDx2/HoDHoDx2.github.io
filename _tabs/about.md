@@ -11,13 +11,17 @@ I'm building a career in cybersecurity with a focus on offensive security and pe
 ## Certifications
 
 **CompTIA Security+**
+
 ![Security+ Certificate](/assets/img/certs/security-plus.png){: width="500" height="350" }
 
 **CompTIA Network+**
+
 ![Network+ Certificate](/assets/img/certs/network-plus.png){: width="500" height="350" }
 
 **eJPT** (eLearnSecurity Junior Penetration Tester)
+
 ![eJPT Certificate](/assets/img/certs/ejpt.png){: width="500" height="350" }
+
 - Currently working toward **OSCP**
 
 ## Hands-On Practice
