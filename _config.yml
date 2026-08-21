@@ -40,7 +40,8 @@ social:
     # https://github.com/username # change to your GitHub homepage
     # Uncomment below to add more social links
     # - https://www.facebook.com/username
-    # - https://www.linkedin.com/in/username
+     - www.linkedin.com/in/haroun-alattas
+
 
 # Site Verification Settings
 webmaster_verifications:
@@ -100,7 +101,7 @@ avatar: /assets/img/Personal_photo.png
 
 # The URL of the site-wide social preview image used in SEO `og:image` meta tag.
 # It can be overridden by a customized `page.image` in front matter.
-social_preview_image: # string, local or CORS resources
+social_preview_image:  /assets/img/Personal_photo.png# string, local or CORS resources
 
 # boolean type, the global switch for TOC in posts.
 toc: true
