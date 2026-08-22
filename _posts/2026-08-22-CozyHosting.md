@@ -4,6 +4,8 @@ date: 2026-08-22 02:10:00 +0300
 categories: [Linux, Web Application]
 tags: [htb,command injection, directory brute force, space bypass, filter evasion technique, waf/filter bypass]     # TAG names should always be lowercase
 ---
+![HTB-CozyHosting](/assets/img/HTB/CozyHosting/LOGO.jpg)
+_HTB-CozyHosting_
 
 #HTB CozyHosting — Walkthrough
 
