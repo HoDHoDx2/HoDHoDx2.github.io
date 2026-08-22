@@ -8,7 +8,8 @@
 
 - type: email
   icon: "fas fa-envelope"
-  noblank: har.alattas@gmail.com # open link in current tab
+  url: "mailto:har.alattas@gmail.com"
+  noblank: true # open link in current tab
 
 #- type: rss
 #  icon: "fas fa-rss"
