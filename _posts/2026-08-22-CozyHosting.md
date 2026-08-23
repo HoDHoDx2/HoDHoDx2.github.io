@@ -12,7 +12,7 @@ CozyHosting is a Linux box on HackTheBox that chains a Spring Boot (Java framewo
 
 ## Enumeration
 
-I started with the usual recon: `nmap` for open ports and services, started with a quick stealth search for all open tcp ports:
+I started with the usual recon: `nmap` for open ports and services using a quick stealth search for all open tcp ports:
 ```bash
 ┌──(HoDHoD㉿kali)-[~/Desktop/HTB/CozyHosting]
 └─$ nmap 10.129.36.130 -p- -sS -T5 -Pn
@@ -100,7 +100,13 @@ by Ben "epi" Risher 🤓                 ver: 2.13.1
 [####################] - 2m     30037/30037   0s      found:31      errors:0      
 [####################] - 2m     30000/30000   247/s   http://cozyhosting.htb/ 
 ```
-> This is general info.
+> HTTP codes for result are as follows:
+200 – OK
+204 – No Content
+400 – Bad Request
+401 – Unauthorized
+404 – Not Found
+500 – Internal Server Error
 {: .prompt-info }
 
 I also tried the `/admin` page directly, but it returned a `401 Unauthorized`.
