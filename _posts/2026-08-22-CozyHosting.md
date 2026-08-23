@@ -8,11 +8,100 @@ tags: [htb,command injection, directory brute force, space bypass, filter evasio
 
 #HTB CozyHosting — Walkthrough
 
-CozyHosting is a Linux box on HackTheBox that chains a Spring Boot Actuator misconfiguration into session hijacking, OS command injection, and a final privilege escalation via a `sudo` misconfiguration on `ssh`. Here's how I worked through it.
+CozyHosting is a Linux box on HackTheBox that chains a Spring Boot (Java framework) Actuator misconfiguration into session hijacking, OS command injection, and a final privilege escalation via a `sudo` misconfiguration on `ssh`. Here's how I worked through it.
 
 ## Enumeration
 
-I started with the usual recon: `nmap` for open ports and services, `feroxbuster` for content discovery, and a quick `hydra` attempt against the login form (which didn't yield anything — no combination of credentials worked there).
+I started with the usual recon: `nmap` for open ports and services, started with a quick stealth search for all open tcp ports:
+```bash
+┌──(HoDHoD㉿kali)-[~/Desktop/HTB/CozyHosting]
+└─$ nmap 10.129.36.130 -p- -sS -T5 -Pn
+Starting Nmap 7.99 ( https://nmap.org ) at 2026-07-27 09:11 -0400
+Nmap scan report for 10.129.36.130
+Host is up (0.11s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE
+22/tcp open  ssh
+80/tcp open  http
+```
+looking further into the services and their versions:
+```bash
+┌──(HoDHoD㉿kali)-[~/Desktop/HTB/CozyHosting]
+└─$ nmap 10.129.36.130 -p 22,80  -sV       
+Starting Nmap 7.99 ( https://nmap.org ) at 2026-07-27 09:28 -0400
+Nmap scan report for 10.129.36.130
+Host is up (0.21s latency).
+
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+80/tcp open  http    nginx 1.18.0 (Ubuntu)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+Will start with web application at port tcp/80 which shows a static website called "Cozy Hosting" with a login page.
+#add website photo and login page snips.
+Running quick `hydra` attempt against the login form (which didn't yield anything — no combination of credentials worked there).
+Now running directory brute force with `feroxbuster`:
+```bash
+┌──(HoDHoD㉿kali)-[~/Desktop/HTB/CozyHosting]
+└─$ feroxbuster -u http://cozyhosting.htb
+                                                                                                                                                                                                                                            
+ ___  ___  __   __     __      __         __   ___
+|__  |__  |__) |__) | /  `    /  \ \_/ | |  \ |__
+|    |___ |  \ |  \ | \__,    \__/ / \ | |__/ |___
+by Ben "epi" Risher 🤓                 ver: 2.13.1
+───────────────────────────┬──────────────────────
+ 🎯  Target Url            │ http://cozyhosting.htb/
+ 🚩  In-Scope Url          │ cozyhosting.htb
+ 🚀  Threads               │ 50
+ 📖  Wordlist              │ /usr/share/feroxbuster/raft-medium-directories.txt
+ 👌  Status Codes          │ All Status Codes!
+ 💥  Timeout (secs)        │ 7
+ 🦡  User-Agent            │ feroxbuster/2.13.1
+ 💉  Config File           │ /etc/feroxbuster/ferox-config.toml
+ 🔎  Extract Links         │ true
+ 🏁  HTTP methods          │ [GET]
+ 🔃  Recursion Depth       │ 4
+───────────────────────────┴──────────────────────
+ 🏁  Press [ENTER] to use the Scan Management Menu™
+──────────────────────────────────────────────────
+404      GET        1l        2w        -c Auto-filtering found 404-like response and created new filter; toggle off with --dont-filter
+204      GET        0l        0w        0c http://cozyhosting.htb/logout
+401      GET        1l        1w       97c http://cozyhosting.htb/admin
+500      GET        1l        1w       73c http://cozyhosting.htb/error
+200      GET      295l      641w     6890c http://cozyhosting.htb/assets/js/main.js
+200      GET       29l      174w    14774c http://cozyhosting.htb/assets/img/pricing-ultimate.png
+200      GET       38l      135w     8621c http://cozyhosting.htb/assets/img/favicon.png
+200      GET       29l      131w    11970c http://cozyhosting.htb/assets/img/pricing-free.png
+200      GET       34l      172w    14934c http://cozyhosting.htb/assets/img/pricing-starter.png
+200      GET       38l      135w     8621c http://cozyhosting.htb/assets/img/logo.png
+200      GET       43l      241w    19406c http://cozyhosting.htb/assets/img/pricing-business.png
+200      GET       79l      519w    40905c http://cozyhosting.htb/assets/img/values-2.png
+200      GET       73l      470w    37464c http://cozyhosting.htb/assets/img/values-1.png
+200      GET       83l      453w    36234c http://cozyhosting.htb/assets/img/values-3.png
+200      GET        1l      313w    14690c http://cozyhosting.htb/assets/vendor/aos/aos.js
+200      GET        1l      218w    26053c http://cozyhosting.htb/assets/vendor/aos/aos.css
+200      GET       81l      517w    40968c http://cozyhosting.htb/assets/img/hero-img.png
+200      GET        1l      625w    55880c http://cozyhosting.htb/assets/vendor/glightbox/js/glightbox.min.js
+200      GET     2397l     4846w    42231c http://cozyhosting.htb/assets/css/style.css
+200      GET        7l     1222w    80420c http://cozyhosting.htb/assets/vendor/bootstrap/js/bootstrap.bundle.min.js
+200      GET       14l     1684w   143706c http://cozyhosting.htb/assets/vendor/swiper/swiper-bundle.min.js
+200      GET     2018l    10020w    95609c http://cozyhosting.htb/assets/vendor/bootstrap-icons/bootstrap-icons.css
+200      GET        7l     2189w   194901c http://cozyhosting.htb/assets/vendor/bootstrap/css/bootstrap.min.css
+200      GET       97l      196w     4431c http://cozyhosting.htb/login
+200      GET      285l      745w    12706c http://cozyhosting.htb/index
+200      GET      285l      745w    12706c http://cozyhosting.htb/
+400      GET        1l       32w      435c http://cozyhosting.htb/plain]
+400      GET        1l       32w      435c http://cozyhosting.htb/[
+400      GET        1l       32w      435c http://cozyhosting.htb/]
+400      GET        1l       32w      435c http://cozyhosting.htb/quote]
+400      GET        1l       32w      435c http://cozyhosting.htb/extension]
+400      GET        1l       32w      435c http://cozyhosting.htb/[0-9]
+[####################] - 2m     30037/30037   0s      found:31      errors:0      
+[####################] - 2m     30000/30000   247/s   http://cozyhosting.htb/ 
+```
+> This is general info.
+{: .prompt-info }
 
 I also tried the `/admin` page directly, but it returned a `401 Unauthorized`.
 
