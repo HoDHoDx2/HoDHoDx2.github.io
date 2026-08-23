@@ -11,7 +11,6 @@ tags: [htb,command injection, directory brute force, space bypass, filter evasio
 CozyHosting is a Linux box on HackTheBox that chains a Spring Boot (Java framework) Actuator misconfiguration into session hijacking, OS command injection, and a final privilege escalation via a `sudo` misconfiguration on `ssh`. Here's how I worked through it.
 
 ## Enumeration
-### Enumeration
 
 I started with the usual recon: `nmap` for open ports and services using a quick stealth search for all open tcp ports:
 ```bash
@@ -102,6 +101,7 @@ by Ben "epi" Risher 🤓                 ver: 2.13.1
 [####################] - 2m     30000/30000   247/s   http://cozyhosting.htb/ 
 ```
 > HTTP codes for result are as follows:
+> 
 > 200 – OK  
 > 204 – No Content  
 > 400 – Bad Request  
@@ -110,12 +110,10 @@ by Ben "epi" Risher 🤓                 ver: 2.13.1
 > 500 – Internal Server Error
 {: .prompt-info }
 
-I also tried the `/admin` page directly, but it returned a `401 Unauthorized`.
-
-While poking around, navigating to `http://cozyhosting.htb/error` returned **Whitelabel Error Page**.
+While poking around, navigating to `http://cozyhosting.htb/error` it returned **Whitelabel Error Page**.
 #add white label error of spring boot
 
-Looking online for this page and found that it is a spring boot, Java framework used to build web application, which its old versions are known to leak information.
+Looking online for this page and found that it is a spring boot, Java framework used to build web application, where its old versions are known to leak information.
 
 ## Finding the Actuator Endpoints
 
@@ -129,7 +127,7 @@ ffuf -c -w spring-boot.txt -u http://cozyhosting.htb/FUZZ
 
 This turned up several live endpoints, including:
 
-```
+```python
 actuator
 actuator/mappings
 actuator/env
@@ -139,7 +137,6 @@ actuator/env/home
 actuator/health
 actuator/sessions
 actuator/beans
-admin        [401]
 ```
 
 The `actuator/sessions` endpoint was the goldmine — Spring Boot's Actuator module exposes active session IDs when it's improperly configured. It revealed:
