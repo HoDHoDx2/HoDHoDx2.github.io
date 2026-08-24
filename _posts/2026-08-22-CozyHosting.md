@@ -128,7 +128,7 @@ ffuf -c -w spring-boot.txt -u http://cozyhosting.htb/FUZZ
 
 This turned up several live endpoints, including:
 
-```ffuf
+```shell
 actuator
 actuator/mappings
 actuator/env
