@@ -3,6 +3,9 @@ title: HTB-CozyHosting
 date: 2026-08-22 02:10:00 +0300
 categories: [Linux, Web Application]
 tags: [htb,command injection, directory brute force, space bypass, filter evasion technique, waf/filter bypass]     # TAG names should always be lowercase
+image:
+  path: /assets/img/HTB/CozyHosting/postlogo.jpg
+  alt: Post thumbnail
 ---
 ![HTB-CozyHosting](/assets/img/HTB/CozyHosting/Logo2.jpg){: width="2400" height="1200" }
 
@@ -380,7 +383,7 @@ The below summery is to recap the journey of hacking this machine.
     </tr>
     <tr>
       <td>Lateral movement</td>
-      <td>Credentials recovered from <code>.jar</code> source + Postgres DB dump</td>
+      <td>Credentials recovered from <code>.jar</code> source + Postgres DB dump + Cracked admin hash</td>
     </tr>
     <tr>
       <td>Privilege escalation</td>
