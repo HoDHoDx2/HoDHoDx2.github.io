@@ -395,4 +395,5 @@ The below summery is to recap the journey of hacking this machine.
   </tbody>
 </table>
 
-CozyHosting is a great reminder of two things: how much Spring Boot Actuator endpoints can leak when they're left exposed, and how a single overly permissive `sudo` rule can undo an otherwise solid setup. Definitely a fun one for anyone practicing web-to-root chains.
+> CozyHosting is a great reminder of two things: how much Spring Boot Actuator endpoints can leak when they're left exposed, and how a > single overly permissive `sudo` rule can undo an otherwise solid setup. Definitely a fun one for anyone practicing web-to-root chains.
+{: .prompt-tip }
