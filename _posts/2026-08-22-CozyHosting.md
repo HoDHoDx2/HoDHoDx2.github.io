@@ -7,8 +7,11 @@ image:
   path: /assets/img/HTB/CozyHosting/test.png
   alt: Post thumbnail
 ---
+{% comment %}
 ![HTB-CozyHosting](/assets/img/HTB/CozyHosting/Logo2.jpg){: width="2400" height="1200" }
-
+This is a private note for myself.
+It will not appear in the generated post.
+{% endcomment %}
 #HTB CozyHosting — Walkthrough
 
 CozyHosting is a Linux box on HackTheBox that chains a Spring Boot (Java framework) Actuator misconfiguration into session hijacking, OS command injection, and a final privilege escalation via a `sudo` misconfiguration on `ssh`. Here's how I worked through it.
