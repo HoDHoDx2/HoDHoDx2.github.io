@@ -4,7 +4,6 @@ date: 2026-08-22 02:10:00 +0300
 categories: [Linux, Web Application]
 image:
   path: /assets/img/HTB/CozyHosting/test.png
-  alt: Post thumbnail
 ---
 {% comment %}
 ![HTB-CozyHosting](/assets/img/HTB/CozyHosting/Logo2.jpg){: width="2400" height="1200" }
