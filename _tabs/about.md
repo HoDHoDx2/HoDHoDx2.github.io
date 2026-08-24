@@ -22,7 +22,7 @@ I'm building a career in cybersecurity with a focus on offensive security and pe
 
 ![eJPT Certificate](/assets/img/certs/ejpt.png){: width="500" height="350" }
 
-- Currently working toward **OSCP**
+
 
 ## Hands-On Practice
 
