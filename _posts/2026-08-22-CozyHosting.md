@@ -4,7 +4,7 @@ date: 2026-08-22 02:10:00 +0300
 categories: [Linux, Web Application]
 tags: [htb,command injection, directory brute force, space bypass, filter evasion technique, waf/filter bypass]     # TAG names should always be lowercase
 image:
-  path: /assets/img/HTB/CozyHosting/postlogo.jpg
+  path: /assets/img/HTB/CozyHosting/test.png
   alt: Post thumbnail
 ---
 ![HTB-CozyHosting](/assets/img/HTB/CozyHosting/Logo2.jpg){: width="2400" height="1200" }
