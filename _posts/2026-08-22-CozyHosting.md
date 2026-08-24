@@ -111,6 +111,7 @@ by Ben "epi" Risher 🤓                 ver: 2.13.1
 {: .prompt-info }
 
 While poking around, navigating to `http://cozyhosting.htb/error` it returned **Whitelabel Error Page**.
+
 ![Spring boot default error page](/assets/img/HTB/CozyHosting/whitelabelerror.png)
 
 Looking online for this page and found that it is a spring boot, Java framework used to build web application, where its old versions are known to leak information.
